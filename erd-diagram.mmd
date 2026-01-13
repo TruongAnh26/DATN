@@ -1,0 +1,266 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#f3e5f5'}}}%%
+
+erDiagram
+    %% ========================================
+    %% Kids Fashion E-Commerce ERD
+    %% Database: PostgreSQL
+    %% ========================================
+
+    %% USER MANAGEMENT
+    users ||--o{ addresses : "has_many"
+    users ||--o{ user_roles : "has_many"
+    roles ||--o{ user_roles : "has_many"
+    users ||--o| carts : "has_one"
+    users ||--o{ orders : "places"
+    users ||--o{ password_reset_tokens : "requests"
+
+    %% PRODUCT MANAGEMENT
+    brands ||--o{ products : "owns"
+    products ||--o{ product_images : "has_many"
+    products ||--o{ product_variants : "has_many"
+    products ||--o{ product_categories : "belongs_to"
+    categories ||--o{ product_categories : "contains"
+    categories ||--o| categories : "parent_of"
+    
+    sizes ||--o{ product_variants : "used_in"
+    colors ||--o{ product_variants : "used_in"
+    product_variants ||--|| inventory : "has_one"
+
+    %% SHOPPING CART
+    carts ||--o{ cart_items : "contains"
+    product_variants ||--o{ cart_items : "added_to"
+
+    %% ORDERS & PAYMENTS
+    orders ||--o{ order_items : "contains"
+    orders ||--|| payments : "paid_by"
+    product_variants ||--o{ order_items : "purchased_as"
+
+    %% ========================================
+    %% ENTITY DEFINITIONS
+    %% ========================================
+
+    users {
+        bigserial id PK
+        varchar email UK "NOT NULL"
+        varchar password_hash "NOT NULL"
+        varchar full_name "NOT NULL"
+        varchar phone_number
+        varchar avatar_url
+        varchar status "DEFAULT ACTIVE"
+        boolean email_verified "DEFAULT FALSE"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    roles {
+        serial id PK
+        varchar name UK "NOT NULL"
+        varchar description
+        timestamp created_at
+    }
+
+    user_roles {
+        bigint user_id PK,FK
+        integer role_id PK,FK
+        timestamp assigned_at
+    }
+
+    addresses {
+        bigserial id PK
+        bigint user_id FK "NOT NULL"
+        varchar recipient_name "NOT NULL"
+        varchar phone_number "NOT NULL"
+        varchar province "NOT NULL"
+        varchar district "NOT NULL"
+        varchar ward "NOT NULL"
+        varchar street_address "NOT NULL"
+        boolean is_default "DEFAULT FALSE"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    password_reset_tokens {
+        bigserial id PK
+        bigint user_id FK "NOT NULL"
+        varchar token UK "NOT NULL"
+        timestamp expires_at "NOT NULL"
+        timestamp used_at
+        timestamp created_at
+    }
+
+    brands {
+        serial id PK
+        varchar name UK "NOT NULL"
+        varchar slug UK "NOT NULL"
+        varchar logo_url
+        text description
+        boolean is_active "DEFAULT TRUE"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    categories {
+        serial id PK
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        text description
+        varchar image_url
+        integer parent_id FK "Self-reference"
+        integer sort_order "DEFAULT 0"
+        boolean is_active "DEFAULT TRUE"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    products {
+        bigserial id PK
+        varchar sku UK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        text description
+        varchar short_description
+        decimal base_price "NOT NULL >= 0"
+        decimal sale_price ">= 0"
+        integer brand_id FK "NOT NULL"
+        integer age_min ">= 0"
+        integer age_max ">= 0"
+        varchar gender "BOYS/GIRLS/UNISEX"
+        varchar material
+        varchar status "DEFAULT ACTIVE"
+        boolean is_featured "DEFAULT FALSE"
+        bigint view_count "DEFAULT 0"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    product_categories {
+        bigint product_id PK,FK
+        integer category_id PK,FK
+    }
+
+    product_images {
+        bigserial id PK
+        bigint product_id FK "NOT NULL"
+        varchar image_url "NOT NULL"
+        varchar alt_text
+        integer sort_order "DEFAULT 0"
+        boolean is_primary "DEFAULT FALSE"
+        timestamp created_at
+    }
+
+    sizes {
+        serial id PK
+        varchar name UK "NOT NULL"
+        integer sort_order "DEFAULT 0"
+    }
+
+    colors {
+        serial id PK
+        varchar name UK "NOT NULL"
+        varchar hex_code "e.g. #FFFFFF"
+        integer sort_order "DEFAULT 0"
+    }
+
+    product_variants {
+        bigserial id PK
+        bigint product_id FK "NOT NULL"
+        integer size_id FK "NOT NULL"
+        integer color_id FK "NOT NULL"
+        varchar sku_variant UK "NOT NULL"
+        decimal price_adjustment "DEFAULT 0"
+        varchar image_url
+        boolean is_active "DEFAULT TRUE"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    inventory {
+        bigserial id PK
+        bigint variant_id FK,UK "NOT NULL"
+        integer quantity "DEFAULT 0 >= 0"
+        integer reserved_quantity "DEFAULT 0 >= 0"
+        integer low_stock_threshold "DEFAULT 10"
+        timestamp updated_at
+    }
+
+    carts {
+        bigserial id PK
+        bigint user_id FK "NULL for guest"
+        varchar session_id "NULL for registered"
+        varchar status "DEFAULT ACTIVE"
+        timestamp expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    cart_items {
+        bigserial id PK
+        bigint cart_id FK "NOT NULL"
+        bigint variant_id FK "NOT NULL"
+        integer quantity "NOT NULL > 0"
+        timestamp added_at
+        timestamp updated_at
+    }
+
+    orders {
+        bigserial id PK
+        varchar order_code UK "NOT NULL"
+        bigint user_id FK "NULL for guest"
+        varchar guest_email "NULL for registered"
+        varchar status "DEFAULT PENDING"
+        varchar recipient_name "NOT NULL"
+        varchar recipient_phone "NOT NULL"
+        varchar shipping_province "NOT NULL"
+        varchar shipping_district "NOT NULL"
+        varchar shipping_ward "NOT NULL"
+        varchar shipping_address "NOT NULL"
+        decimal subtotal "NOT NULL >= 0"
+        decimal shipping_fee "DEFAULT 0 >= 0"
+        decimal total_amount "NOT NULL >= 0"
+        varchar payment_method "NOT NULL"
+        varchar shipping_method
+        text notes
+        timestamp paid_at
+        timestamp shipped_at
+        timestamp completed_at
+        timestamp cancelled_at
+        varchar cancellation_reason
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    order_items {
+        bigserial id PK
+        bigint order_id FK "NOT NULL"
+        bigint variant_id FK "NOT NULL"
+        varchar product_name "Snapshot NOT NULL"
+        varchar variant_sku "Snapshot NOT NULL"
+        varchar size_name "Snapshot NOT NULL"
+        varchar color_name "Snapshot NOT NULL"
+        decimal unit_price "Snapshot NOT NULL >= 0"
+        integer quantity "NOT NULL > 0"
+        decimal subtotal "NOT NULL >= 0"
+        varchar product_image_url "Snapshot"
+        timestamp created_at
+    }
+
+    payments {
+        bigserial id PK
+        bigint order_id FK,UK "NOT NULL"
+        varchar transaction_id UK "NOT NULL"
+        varchar gateway "NOT NULL"
+        varchar gateway_transaction_id
+        decimal amount "NOT NULL > 0"
+        varchar currency "DEFAULT VND"
+        varchar status "DEFAULT PENDING"
+        varchar payment_method
+        varchar payer_email
+        jsonb gateway_response
+        jsonb metadata
+        timestamp paid_at
+        timestamp failed_at
+        varchar failure_reason
+        timestamp created_at
+        timestamp updated_at
+    }
+

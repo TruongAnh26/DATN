@@ -1,0 +1,249 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-cream text-dark-900 font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
+  }
+}
+
+/* Component Styles */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg
+           transition-all duration-300 ease-out cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-500 text-white
+           hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/25
+           active:scale-[0.98];
+  }
+  
+  .btn-secondary {
+    @apply btn bg-dark-900 text-white
+           hover:bg-dark-800 hover:shadow-lg
+           active:scale-[0.98];
+  }
+  
+  .btn-outline {
+    @apply btn border-2 border-dark-900 text-dark-900 bg-transparent
+           hover:bg-dark-900 hover:text-white
+           active:scale-[0.98];
+  }
+  
+  .btn-ghost {
+    @apply btn text-dark-700 bg-transparent
+           hover:bg-dark-100
+           active:scale-[0.98];
+  }
+
+  /* Form Inputs */
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-dark-200 rounded-lg
+           text-dark-900 placeholder-dark-400
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+           transition-all duration-200;
+  }
+  
+  .input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-sm overflow-hidden
+           transition-all duration-300;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-xl hover:-translate-y-1;
+  }
+
+  /* Product Card - Note: Add 'group' class directly to element in JSX */
+  .product-card {
+    @apply bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 cursor-pointer;
+  }
+  
+  .product-card-image {
+    @apply relative aspect-[3/4] overflow-hidden bg-sand;
+  }
+  
+  .product-card-image img {
+    @apply w-full h-full object-cover transition-transform duration-500 ease-out;
+  }
+  
+  .product-card:hover .product-card-image img {
+    @apply scale-105;
+  }
+  
+  .product-card-badge {
+    @apply absolute top-3 left-3 px-3 py-1 text-xs font-semibold uppercase tracking-wider
+           rounded-full;
+  }
+  
+  .product-card-badge-sale {
+    @apply bg-red-500 text-white;
+  }
+  
+  .product-card-badge-new {
+    @apply bg-primary-500 text-white;
+  }
+  
+  .product-card-actions {
+    @apply absolute bottom-0 left-0 right-0 p-4
+           flex items-center justify-center gap-2
+           translate-y-full opacity-0
+           transition-all duration-300 ease-out
+           bg-gradient-to-t from-black/60 to-transparent;
+  }
+  
+  .product-card:hover .product-card-actions {
+    @apply translate-y-0 opacity-100;
+  }
+  
+  .product-card-content {
+    @apply p-4;
+  }
+  
+  .product-card-brand {
+    @apply text-xs font-medium text-dark-500 uppercase tracking-wider mb-1;
+  }
+  
+  .product-card-name {
+    @apply text-sm font-semibold text-dark-900 line-clamp-2 mb-2 min-h-[2.5rem] transition-colors;
+  }
+  
+  .product-card:hover .product-card-name {
+    @apply text-primary-600;
+  }
+  
+  .product-card-price {
+    @apply flex items-center gap-2;
+  }
+  
+  .product-card-price-current {
+    @apply text-lg font-bold text-primary-600;
+  }
+  
+  .product-card-price-original {
+    @apply text-sm text-dark-400 line-through;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-100 text-primary-700;
+  }
+  
+  .badge-secondary {
+    @apply bg-secondary-100 text-secondary-700;
+  }
+
+  /* Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section */
+  .section {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+  
+  .section-title {
+    @apply text-2xl md:text-3xl lg:text-4xl font-display font-bold text-dark-900
+           text-center mb-2;
+  }
+  
+  .section-subtitle {
+    @apply text-dark-500 text-center mb-8 md:mb-12;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply relative text-dark-700 font-medium py-2
+           hover:text-primary-600 transition-colors
+           after:absolute after:bottom-0 after:left-0 after:right-0
+           after:h-0.5 after:bg-primary-500 after:origin-left
+           after:scale-x-0 after:transition-transform
+           hover:after:scale-x-100;
+  }
+  
+  .nav-link-active {
+    @apply text-primary-600 after:scale-x-100;
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Animation delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+}
+
+/* Swiper Custom Styles */
+.swiper-pagination-bullet {
+  @apply w-2 h-2 bg-dark-300 opacity-100;
+}
+
+.swiper-pagination-bullet-active {
+  @apply bg-primary-500 w-6 rounded-full;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  @apply w-10 h-10 bg-white rounded-full shadow-lg
+         after:text-dark-900 after:text-sm after:font-bold;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  @apply bg-primary-500 after:text-white;
+}
+
