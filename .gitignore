@@ -1,0 +1,74 @@
+# =====================================================
+# Node.js / Frontend
+# =====================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# =====================================================
+# Java / Maven / Backend
+# =====================================================
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.idea/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# =====================================================
+# IDE / Editor
+# =====================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.ipr
+*.iws
+
+# =====================================================
+# Environment variables
+# =====================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =====================================================
+# OS
+# =====================================================
+Thumbs.db
+.DS_Store
+
+# =====================================================
+# Uploads (optional - uncomment if you don't want to track uploads)
+# =====================================================
+# backend/uploads/
+
+# =====================================================
+# Database
+# =====================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# =====================================================
+# Logs
+# =====================================================
+logs/
+*.log

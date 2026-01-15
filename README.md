@@ -60,8 +60,12 @@ DATN/
 ```bash
 # Create database
 createdb kids_fashion_db
+```
 
-# Run schema script
+**Note:** The schema will be automatically created when you start the Spring Boot application. The `schema.sql` script in `backend/src/main/resources/` will run automatically on startup.
+
+Alternatively, you can manually run the schema script:
+```bash
 psql -d kids_fashion_db -f schema.sql
 ```
 
@@ -75,7 +79,7 @@ cd backend
 # Configure database connection in src/main/resources/application.yml
 # Update username and password if needed
 
-# Run with Maven
+# Run with Maven (schema.sql will run automatically)
 mvn spring-boot:run
 
 # Or build and run JAR
