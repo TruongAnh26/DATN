@@ -43,6 +43,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Payment endpoints - must be FIRST to avoid static resource matching
+                        .requestMatchers("/payments/**").permitAll()
+                        
                         // Public endpoints
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/seed/**").permitAll()  // Dev only - remove in production
@@ -67,9 +70,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/orders/track/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/orders/my-orders").permitAll()
                         .requestMatchers(HttpMethod.GET, "/orders/guest").permitAll()
-                        
-                        // Payment callbacks
-                        .requestMatchers("/payments/callback/**").permitAll()
                         
                         // Admin endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")

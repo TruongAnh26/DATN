@@ -63,3 +63,17 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
+# Payment Gateway Configuration
+payment:
+  vnpay:
+    tmn-code: YOUR_VNPAY_TMN_CODE
+    hash-secret: YOUR_VNPAY_HASH_SECRET
+    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    return-url: http://localhost:5173/payment/callback/vnpay
+  momo:
+    partner-code: YOUR_MOMO_PARTNER_CODE
+    access-key: YOUR_MOMO_ACCESS_KEY
+    secret-key: YOUR_MOMO_SECRET_KEY
+    url: https://test-payment.momo.vn/v2/gateway/api/create
+    return-url: http://localhost:5173/payment/callback/momo
+  frontend-url: http://localhost:5173

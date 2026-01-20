@@ -1,10 +1,13 @@
 package com.kidsfashion.service;
 
 import com.kidsfashion.dto.request.CreateOrderRequest;
+import com.kidsfashion.dto.request.CreatePaymentRequest;
 import com.kidsfashion.dto.response.OrderResponse;
 import com.kidsfashion.entity.*;
 import com.kidsfashion.entity.enums.CartStatus;
 import com.kidsfashion.entity.enums.OrderStatus;
+import com.kidsfashion.entity.enums.PaymentGateway;
+import com.kidsfashion.entity.enums.PaymentStatus;
 import com.kidsfashion.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,7 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final InventoryRepository inventoryRepository;
+    private final PaymentRepository paymentRepository;
 
     private static final BigDecimal FREE_SHIPPING_THRESHOLD = new BigDecimal("599000");
     private static final BigDecimal STANDARD_SHIPPING_FEE = new BigDecimal("30000");
@@ -106,6 +111,11 @@ public class OrderService {
         }
 
         order = orderRepository.save(order);
+
+        // Create payment if payment method is VNPay or MoMo
+        if ("VNPAY".equals(request.getPaymentMethod()) || "MOMO".equals(request.getPaymentMethod())) {
+            createPaymentForOrder(order, totalAmount);
+        }
 
         // Clear cart - mark as MERGED (reusing status since CONVERTED not in DB constraint)
         cart.setStatus(CartStatus.MERGED);
@@ -275,6 +285,22 @@ public class OrderService {
                 .quantity(item.getQuantity())
                 .subtotal(item.getSubtotal())
                 .build();
+    }
+
+    private void createPaymentForOrder(Order order, BigDecimal amount) {
+        PaymentGateway gateway = PaymentGateway.valueOf(order.getPaymentMethod());
+        String transactionId = "TXN" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        
+        Payment payment = Payment.builder()
+                .order(order)
+                .transactionId(transactionId)
+                .gateway(gateway)
+                .amount(amount)
+                .currency("VND")
+                .status(PaymentStatus.PENDING)
+                .build();
+        
+        paymentRepository.save(payment);
     }
 
     private OrderResponse.PaymentResponse mapToPaymentResponse(Payment payment) {

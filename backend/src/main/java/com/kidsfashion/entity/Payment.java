@@ -69,6 +69,14 @@ public class Payment extends BaseEntity {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
+    // Override getter to ensure metadata is never null
+    public Map<String, Object> getMetadata() {
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
+        return metadata;
+    }
+
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 

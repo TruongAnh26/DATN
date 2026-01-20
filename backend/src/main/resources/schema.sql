@@ -512,9 +512,15 @@ INSERT INTO categories (name, slug, parent_id, sort_order) VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- Insert sample admin user (password: admin123 - use BCrypt hash in production) (idempotent)
+-- This uses UPSERT to ensure password is always updated correctly
 INSERT INTO users (email, password_hash, full_name, phone_number, status, email_verified)
 VALUES ('admin@kidsfashion.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZRGdjGj/n3krkRLqQ6L5YzYbB8fK6', 'System Admin', '0123456789', 'ACTIVE', TRUE)
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET
+    password_hash = EXCLUDED.password_hash,
+    full_name = EXCLUDED.full_name,
+    phone_number = EXCLUDED.phone_number,
+    status = EXCLUDED.status,
+    email_verified = EXCLUDED.email_verified;
 
 -- Assign admin role (idempotent)
 INSERT INTO user_roles (user_id, role_id)
