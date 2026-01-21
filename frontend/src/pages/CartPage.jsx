@@ -59,6 +59,17 @@ const CartPage = () => {
     )
   }
 
+  const getImageUrl = (url) => {
+    if (!url) return 'https://placehold.co/100x100?text=No+Image';
+    if (url.startsWith('/uploads')) {
+      return `http://localhost:8080/api${url}`;
+    }
+    if (url.startsWith('/')) {
+      return `http://localhost:8080/api/uploads${url}`;
+    }
+    return url;
+  };
+
   return (
     <div className="min-h-screen bg-cream">
       <div className="container-custom py-8">
@@ -96,7 +107,7 @@ const CartPage = () => {
                     className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-sand"
                   >
                     <img
-                      src={item.imageUrl || '/placeholder-product.jpg'}
+                      src={getImageUrl(item.imageUrl) || '/placeholder-product.jpg'}
                       alt={item.productName}
                       className="w-full h-full object-cover"
                     />

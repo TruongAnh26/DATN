@@ -97,6 +97,17 @@ const OrdersPage = () => {
     return order.orderCode.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
+  const getImageUrl = (url) => {
+    if (!url) return 'https://placehold.co/100x100?text=No+Image';
+    if (url.startsWith('/uploads')) {
+      return `http://localhost:8080/api${url}`;
+    }
+    if (url.startsWith('/')) {
+      return `http://localhost:8080/api/uploads${url}`;
+    }
+    return url;
+  };
+
   if (!user) return null
 
   return (
@@ -168,7 +179,7 @@ const OrdersPage = () => {
                   {order.items?.map((item, index) => (
                     <div key={index} className={`flex gap-4 ${index > 0 ? 'mt-4 pt-4 border-t border-dark-100' : ''}`}>
                       <img
-                        src={item.productImageUrl || '/placeholder-product.jpg'}
+                        src={getImageUrl(item.productImageUrl) || '/placeholder-product.jpg'}
                         alt={item.productName}
                         className="w-20 h-20 object-cover rounded-lg bg-sand"
                       />

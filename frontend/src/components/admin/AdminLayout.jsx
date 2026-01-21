@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import PhanKidLogo from '../layout/PhanKidLogo';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -81,9 +82,12 @@ const AdminLayout = () => {
       >
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 bg-slate-800">
-          <NavLink to="/admin" className="flex items-center space-x-2">
-            <span className="text-2xl">👶</span>
-            <span className="text-xl font-bold text-white">Admin Panel</span>
+          <NavLink to="/admin" className="flex items-center space-x-3">
+            <PhanKidLogo size="small" showText={false} />
+            <div>
+              <span className="text-lg font-bold text-white block">PhanKid</span>
+              <span className="text-xs text-gray-400 block -mt-0.5">Admin Panel</span>
+            </div>
           </NavLink>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -196,12 +200,12 @@ const AdminLayout = () => {
                 {/* Dropdown */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="py-1">
-                    <NavLink
+                    {/* <NavLink
                       to="/account"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Tài khoản của tôi
-                    </NavLink>
+                    </NavLink> */}
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"

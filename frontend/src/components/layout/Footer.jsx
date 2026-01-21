@@ -11,6 +11,7 @@ import {
   Shield,
   RefreshCw
 } from 'lucide-react'
+import PhanKidLogo from './PhanKidLogo'
 
 const Footer = () => {
   const features = [
@@ -46,15 +47,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-display font-bold text-lg">K</span>
-              </div>
-              <div>
-                <h1 className="font-display font-bold text-xl">
-                  Kids<span className="text-primary-400">Fashion</span>
-                </h1>
-              </div>
+            <Link to="/" className="mb-4 inline-block">
+              <PhanKidLogo size="default" showText={true} />
             </Link>
             <p className="text-dark-400 text-sm mb-4">
               Thương hiệu thời trang trẻ em hàng đầu Việt Nam với sứ mệnh mang đến 
@@ -164,8 +158,8 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary-400" />
-                <a href="mailto:info@kidsfashion.vn" className="text-dark-400 hover:text-primary-400 transition-colors text-sm">
-                  info@kidsfashion.vn
+                <a href="mailto:info@phankid.vn" className="text-dark-400 hover:text-primary-400 transition-colors text-sm">
+                  info@phankid.vn
                 </a>
               </li>
             </ul>
@@ -188,7 +182,7 @@ const Footer = () => {
         <div className="container-custom py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-dark-400 text-sm text-center md:text-left">
-              © 2024 KidsFashion. All rights reserved. Graduation Project.
+              © 2024 PhanKid. All rights reserved. Graduation Project.
             </p>
             <div className="flex items-center gap-4 text-sm">
               <Link to="/privacy" className="text-dark-400 hover:text-primary-400 transition-colors">

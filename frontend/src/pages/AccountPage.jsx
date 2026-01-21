@@ -11,22 +11,64 @@ import {
   ChevronRight,
   Edit2,
   Plus,
-  Trash2
+  Trash2,
+  Loader2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { logout } from '../store/slices/authSlice'
+import orderService from '../services/orderService'
 
 const AccountPage = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
   const [activeTab, setActiveTab] = useState('profile')
+  const [recentOrders, setRecentOrders] = useState([])
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false)
+  const [addresses, setAddresses] = useState([])
 
   useEffect(() => {
     if (!user) {
       navigate('/login?redirect=/account')
     }
   }, [user, navigate])
+
+  useEffect(() => {
+    if (user && activeTab === 'orders') {
+      fetchRecentOrders()
+    }
+  }, [user, activeTab])
+
+  const fetchRecentOrders = async () => {
+    setIsLoadingOrders(true)
+    try {
+      const data = await orderService.getMyOrders(null, 0, 5) // Get first 5 orders
+      setRecentOrders(data.content || [])
+      
+      // Extract unique addresses from orders
+      const uniqueAddresses = new Map()
+      data.content?.forEach(order => {
+        if (order.shippingAddress) {
+          const addrKey = `${order.shippingAddress.street}-${order.shippingAddress.ward}-${order.shippingAddress.district}`
+          if (!uniqueAddresses.has(addrKey)) {
+            uniqueAddresses.set(addrKey, {
+              id: uniqueAddresses.size + 1,
+              name: order.shippingAddress.fullName || user.fullName,
+              phone: order.shippingAddress.phoneNumber || user.phoneNumber,
+              address: `${order.shippingAddress.street}, ${order.shippingAddress.ward}, ${order.shippingAddress.district}, ${order.shippingAddress.province}`,
+              isDefault: uniqueAddresses.size === 0
+            })
+          }
+        }
+      })
+      setAddresses(Array.from(uniqueAddresses.values()))
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      toast.error('Không thể tải danh sách đơn hàng')
+    } finally {
+      setIsLoadingOrders(false)
+    }
+  }
 
   const handleLogout = () => {
     dispatch(logout())
@@ -46,36 +88,14 @@ const AccountPage = () => {
     { id: 'settings', label: 'Cài đặt tài khoản', icon: Settings },
   ]
 
-  // Mock data for orders
-  const recentOrders = [
-    { 
-      id: 1, 
-      code: 'ORD-20241210-000001', 
-      date: '10/12/2024', 
-      status: 'COMPLETED',
-      total: 1250000,
-      items: 3
-    },
-    { 
-      id: 2, 
-      code: 'ORD-20241208-000002', 
-      date: '08/12/2024', 
-      status: 'SHIPPING',
-      total: 890000,
-      items: 2
-    },
-  ]
-
-  // Mock addresses
-  const addresses = [
-    {
-      id: 1,
-      name: user.fullName,
-      phone: user.phoneNumber || '0901234567',
-      address: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
-      isDefault: true
-    }
-  ]
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -119,7 +139,12 @@ const AccountPage = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">{user.fullName}</h3>
-                  <p className="text-dark-500">Thành viên từ tháng 12/2024</p>
+                  <p className="text-dark-500">
+                    {user.createdAt 
+                      ? `Thành viên từ ${new Date(user.createdAt).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`
+                      : 'Thành viên'
+                    }
+                  </p>
                 </div>
               </div>
 
@@ -155,23 +180,28 @@ const AccountPage = () => {
               </Link>
             </div>
 
-            {recentOrders.length > 0 ? (
+            {isLoadingOrders ? (
+              <div className="text-center py-12 bg-sand rounded-xl">
+                <Loader2 className="w-10 h-10 text-primary-500 animate-spin mx-auto mb-4" />
+                <p className="text-dark-500">Đang tải đơn hàng...</p>
+              </div>
+            ) : recentOrders.length > 0 ? (
               <div className="space-y-4">
                 {recentOrders.map((order) => (
                   <div key={order.id} className="bg-sand rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-semibold">{order.code}</p>
-                        <p className="text-sm text-dark-500">{order.date}</p>
+                        <p className="font-semibold">{order.orderCode}</p>
+                        <p className="text-sm text-dark-500">{formatDate(order.createdAt)}</p>
                       </div>
                       {getStatusBadge(order.status)}
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-dark-500">{order.items} sản phẩm</p>
-                      <p className="font-bold text-primary-600">{formatPrice(order.total)}</p>
+                      <p className="text-sm text-dark-500">{order.totalItems || 0} sản phẩm</p>
+                      <p className="font-bold text-primary-600">{formatPrice(order.totalAmount)}</p>
                     </div>
                     <Link 
-                      to={`/orders/${order.code}`}
+                      to={`/orders/track/${order.orderCode}`}
                       className="mt-3 text-sm text-primary-500 hover:underline flex items-center gap-1"
                     >
                       Xem chi tiết <ChevronRight className="w-4 h-4" />
@@ -196,38 +226,60 @@ const AccountPage = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold">Địa chỉ giao hàng</h2>
-              <button className="btn-primary text-sm flex items-center gap-2">
+              <button 
+                className="btn-primary text-sm flex items-center gap-2"
+                onClick={() => toast('Tính năng đang phát triển', { icon: 'ℹ️' })}
+              >
                 <Plus className="w-4 h-4" />
                 Thêm địa chỉ
               </button>
             </div>
 
-            <div className="space-y-4">
-              {addresses.map((addr) => (
-                <div key={addr.id} className="bg-sand rounded-xl p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold">{addr.name}</p>
-                        {addr.isDefault && (
-                          <span className="badge bg-primary-100 text-primary-700">Mặc định</span>
-                        )}
+            {addresses.length > 0 ? (
+              <div className="space-y-4">
+                {addresses.map((addr) => (
+                  <div key={addr.id} className="bg-sand rounded-xl p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold">{addr.name}</p>
+                          {addr.isDefault && (
+                            <span className="badge bg-primary-100 text-primary-700">Mặc định</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-dark-500">{addr.phone}</p>
+                        <p className="text-sm text-dark-600 mt-1">{addr.address}</p>
                       </div>
-                      <p className="text-sm text-dark-500">{addr.phone}</p>
-                      <p className="text-sm text-dark-600 mt-1">{addr.address}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 text-dark-500 hover:text-primary-500">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-dark-500 hover:text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          className="p-2 text-dark-500 hover:text-primary-500"
+                          onClick={() => toast('Tính năng đang phát triển', { icon: 'ℹ️' })}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          className="p-2 text-dark-500 hover:text-red-500"
+                          onClick={() => toast('Tính năng đang phát triển', { icon: 'ℹ️' })}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-sand rounded-xl">
+                <MapPin className="w-16 h-16 text-dark-300 mx-auto mb-4" />
+                <p className="text-dark-500 mb-4">Bạn chưa có địa chỉ giao hàng nào</p>
+                <p className="text-sm text-dark-400 mb-4">
+                  Địa chỉ sẽ được lưu tự động khi bạn đặt hàng
+                </p>
+                <Link to="/products" className="btn-primary">
+                  Mua sắm ngay
+                </Link>
+              </div>
+            )}
           </div>
         )
 

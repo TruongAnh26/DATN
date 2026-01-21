@@ -35,7 +35,7 @@ const HomePage = () => {
 
   const heroSlides = [
     {
-      title: 'Bộ sưu tập Đông 2024',
+      title: 'Bộ sưu tập Đông 2026',
       subtitle: 'Ấm áp & Phong cách',
       description: 'Khám phá những thiết kế mới nhất cho mùa đông năm nay',
       image: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=1920&h=800&fit=crop',
@@ -94,15 +94,16 @@ const HomePage = () => {
   return (
     <div>
       {/* Hero Slider */}
-      <section className="relative">
+      <section className="relative group">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           spaceBetween={0}
           slidesPerView={1}
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           pagination={{ clickable: true }}
-          navigation
-          className="h-[400px] md:h-[500px] lg:h-[600px]"
+          navigation={true}
+          loop={true}
+          className="h-[400px] md:h-[500px] lg:h-[600px] hero-swiper"
         >
           {heroSlides.map((slide, index) => (
             <SwiperSlide key={index}>

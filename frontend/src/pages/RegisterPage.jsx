@@ -34,7 +34,17 @@ const RegisterPage = () => {
 
     if (isSuccess || user) {
       toast.success('Đăng ký thành công!')
-      navigate(redirect)
+      
+      // Check if user is admin (shouldn't happen on register, but just in case)
+      const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ROLE_ADMIN')
+      
+      // Admin always redirects to dashboard
+      if (isAdmin) {
+        navigate('/admin')
+      } else {
+        // Regular users redirect to their intended destination
+        navigate(redirect)
+      }
     }
 
     dispatch(reset())
