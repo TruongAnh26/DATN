@@ -37,6 +37,7 @@ public class OrderService {
 
     private static final BigDecimal FREE_SHIPPING_THRESHOLD = new BigDecimal("599000");
     private static final BigDecimal STANDARD_SHIPPING_FEE = new BigDecimal("30000");
+    private static final BigDecimal EXPRESS_SHIPPING_FEE = new BigDecimal("50000");
 
     @Transactional
     public OrderResponse createOrder(Long userId, String sessionId, CreateOrderRequest request) {
@@ -72,8 +73,14 @@ public class OrderService {
 
         // Calculate totals
         BigDecimal subtotal = cart.getSubtotal();
-        BigDecimal shippingFee = subtotal.compareTo(FREE_SHIPPING_THRESHOLD) >= 0 
-                ? BigDecimal.ZERO : STANDARD_SHIPPING_FEE;
+        String shippingMethod = request.getShippingMethod() != null
+                ? request.getShippingMethod()
+                : "STANDARD";
+        boolean isExpress = "express".equalsIgnoreCase(shippingMethod);
+        BigDecimal baseShippingFee = isExpress ? EXPRESS_SHIPPING_FEE : STANDARD_SHIPPING_FEE;
+        BigDecimal shippingFee = subtotal.compareTo(FREE_SHIPPING_THRESHOLD) >= 0
+                ? BigDecimal.ZERO
+                : baseShippingFee;
         BigDecimal totalAmount = subtotal.add(shippingFee);
 
         // Get user if logged in
@@ -100,7 +107,7 @@ public class OrderService {
                 .shippingFee(shippingFee)
                 .totalAmount(totalAmount)
                 .paymentMethod(request.getPaymentMethod())
-                .shippingMethod(request.getShippingMethod() != null ? request.getShippingMethod() : "STANDARD")
+                .shippingMethod(shippingMethod)
                 .notes(request.getNotes())
                 .build();
 

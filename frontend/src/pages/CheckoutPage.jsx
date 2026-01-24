@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 import orderService from '../services/orderService'
 import paymentService from '../services/paymentService'
 import { clearCart } from '../store/slices/cartSlice'
+import StripeCheckout from '../components/checkout/StripeCheckout'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
@@ -42,8 +43,7 @@ const CheckoutPage = () => {
 
   const paymentMethods = [
     { id: 'COD', name: 'Thanh toán khi nhận hàng', icon: '💵', desc: 'Thanh toán bằng tiền mặt khi nhận hàng' },
-    { id: 'VNPAY', name: 'VNPay', icon: '🏦', desc: 'Thanh toán qua cổng VNPay' },
-    { id: 'MOMO', name: 'Ví MoMo', icon: '📱', desc: 'Thanh toán qua ví điện tử MoMo' },
+    { id: 'STRIPE', name: 'Thẻ tín dụng/Ghi nợ', icon: '💳', desc: 'Thanh toán an toàn qua Stripe (Visa, Mastercard, ...)' },
   ]
 
   const shippingMethods = [
@@ -116,38 +116,14 @@ const CheckoutPage = () => {
       
       const order = await orderService.createOrder(orderData)
       
-      // If payment method is VNPay or MoMo, create payment and show QR code
-      if (paymentMethod === 'VNPAY' || paymentMethod === 'MOMO') {
-        try {
-          const payment = await paymentService.createPayment(order.id, total)
-          console.log('Payment response:', payment) // Debug log
-          
-          if (!payment.qrCode) {
-            console.error('QR code is missing in payment response')
-            toast.error('Không thể tạo mã QR. Vui lòng thử lại hoặc sử dụng link thanh toán.')
-          }
-          
-          setPaymentData({
-            paymentUrl: payment.paymentUrl,
-            qrCode: payment.qrCode, // Base64 encoded QR code
-            orderCode: order.orderCode,
-            gateway: payment.gateway
-          })
-          
-          if (payment.qrCode) {
-            toast.success('Mã QR đã được tạo. Vui lòng quét mã để thanh toán.')
-          } else {
-            toast('Mã QR chưa sẵn sàng. Vui lòng sử dụng link thanh toán bên dưới.', { icon: '⚠️' })
-          }
-          
-          setShowPaymentModal(true)
-          // Don't clear cart yet - let user see QR code first
-          // Cart will be cleared when user closes modal or payment succeeds
-        } catch (error) {
-          toast.error('Có lỗi xảy ra khi tạo thanh toán')
-          console.error('Payment creation error:', error)
-          console.error('Error response:', error.response?.data)
-        }
+      // If payment method is Stripe, show Stripe checkout modal
+      if (paymentMethod === 'STRIPE') {
+        setPaymentData({
+          orderId: order.id,
+          orderCode: order.orderCode,
+          amount: total
+        })
+        setShowPaymentModal(true)
       } else {
         // COD - redirect to success page
         dispatch(clearCart())
@@ -159,6 +135,19 @@ const CheckoutPage = () => {
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleStripeSuccess = (paymentIntent) => {
+    console.log('Stripe payment succeeded:', paymentIntent)
+    dispatch(clearCart())
+    setShowPaymentModal(false)
+    navigate(`/order-success?code=${paymentData.orderCode}`)
+  }
+
+  const handleStripeCancel = () => {
+    setShowPaymentModal(false)
+    // Keep the order but don't clear cart - user can try again
+    toast('Thanh toán đã bị hủy. Bạn có thể thử lại.', { icon: '⚠️' })
   }
 
   if (items.length === 0) return null
@@ -545,119 +534,25 @@ const CheckoutPage = () => {
         </div>
       </div>
 
-      {/* Payment Modal with QR Code */}
+      {/* Stripe Payment Modal */}
       {showPaymentModal && paymentData && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
-            // Prevent closing when clicking outside - user must use buttons
             if (e.target === e.currentTarget) {
-              // Optionally allow closing by clicking outside
-              // setShowPaymentModal(false)
+              // Allow closing by clicking outside
+              handleStripeCancel()
             }
           }}
         >
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full relative">
-            {/* Close button */}
-            <button
-              onClick={() => {
-                setShowPaymentModal(false)
-                dispatch(clearCart())
-              }}
-              className="absolute top-4 right-4 text-dark-400 hover:text-dark-900 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            <h2 className="text-2xl font-display font-bold text-center mb-4">
-              Thanh toán qua {paymentData.gateway === 'VNPAY' ? 'VNPay' : 'MoMo'}
-            </h2>
-            
-            <div className="text-center mb-6">
-              <p className="text-dark-600 mb-2">Mã đơn hàng: <span className="font-semibold">{paymentData.orderCode}</span></p>
-              <p className="text-dark-600 mb-4">Số tiền: <span className="font-semibold text-primary-600">{formatPrice(total)}</span></p>
-            </div>
-
-            {/* QR Code */}
-            {paymentData.qrCode ? (
-              <div className="flex flex-col items-center mb-6">
-                <p className="text-sm text-dark-500 mb-3">Quét mã QR để thanh toán</p>
-                <div className="bg-white p-4 rounded-xl border-2 border-primary-200 shadow-lg">
-                  <img 
-                    src={`data:image/png;base64,${paymentData.qrCode}`} 
-                    alt="QR Code" 
-                    className="w-64 h-64"
-                    onError={(e) => {
-                      console.error('Error loading QR code image:', e)
-                      e.target.style.display = 'none'
-                      // Show fallback message
-                      const parent = e.target.parentElement
-                      if (parent && !parent.querySelector('.qr-error')) {
-                        const errorDiv = document.createElement('div')
-                        errorDiv.className = 'qr-error text-red-500 text-sm mt-2'
-                        errorDiv.textContent = 'Không thể hiển thị QR code'
-                        parent.appendChild(errorDiv)
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            ) : paymentData.paymentUrl ? (
-              <div className="flex flex-col items-center mb-6">
-                <p className="text-sm text-yellow-600 mb-3">Mã QR chưa sẵn sàng. Vui lòng sử dụng link bên dưới để thanh toán.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center mb-6">
-                <p className="text-sm text-dark-500 mb-3">Đang tạo mã QR...</p>
-                <div className="bg-gray-100 p-4 rounded-xl border-2 border-gray-200 w-64 h-64 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-                </div>
-              </div>
-            )}
-
-            {/* Payment URL Button */}
-            {paymentData.paymentUrl && (
-              <div className="mb-6">
-                <a
-                  href={paymentData.paymentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary w-full block text-center"
-                >
-                  Mở trang thanh toán
-                </a>
-              </div>
-            )}
-
-            <div className="text-center text-sm text-dark-500 mb-4">
-              <p>Vui lòng hoàn tất thanh toán trong vòng 15 phút</p>
-              <p>Đơn hàng sẽ tự động hủy nếu không thanh toán</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowPaymentModal(false)
-                  dispatch(clearCart()) // Clear cart when user closes modal
-                  navigate(`/orders/track/${paymentData.orderCode}`)
-                }}
-                className="btn-outline flex-1"
-              >
-                Xem đơn hàng
-              </button>
-              <button
-                onClick={() => {
-                  setShowPaymentModal(false)
-                  dispatch(clearCart()) // Clear cart when user closes modal
-                  navigate('/')
-                }}
-                className="btn-primary flex-1"
-              >
-                Về trang chủ
-              </button>
-            </div>
+          <div className="max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <StripeCheckout
+              orderId={paymentData.orderId}
+              orderCode={paymentData.orderCode}
+              amount={paymentData.amount}
+              onSuccess={handleStripeSuccess}
+              onCancel={handleStripeCancel}
+            />
           </div>
         </div>
       )}

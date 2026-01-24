@@ -1,12 +1,15 @@
 package com.kidsfashion.controller;
 
 import com.kidsfashion.dto.ApiResponse;
+import com.kidsfashion.dto.response.CategoryTreeResponse;
 import com.kidsfashion.entity.Category;
 import com.kidsfashion.repository.CategoryRepository;
+import com.kidsfashion.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -15,6 +18,12 @@ import java.util.Map;
 public class AdminCategoryController {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
+
+    @GetMapping("/tree")
+    public ResponseEntity<ApiResponse<List<CategoryTreeResponse>>> getAdminCategoryTree() {
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getCategoryTreeForAdmin()));
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> createCategory(@RequestBody Map<String, Object> request) {

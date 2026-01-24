@@ -56,6 +56,22 @@ const ProductsPage = () => {
     setSearchParams(newParams)
   }
 
+  const updatePriceRange = (min, max) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (min === '' || min === null || min === undefined) {
+      newParams.delete('minPrice')
+    } else {
+      newParams.set('minPrice', min)
+    }
+    if (max === '' || max === null || max === undefined) {
+      newParams.delete('maxPrice')
+    } else {
+      newParams.set('maxPrice', max)
+    }
+    newParams.set('page', '0')
+    setSearchParams(newParams)
+  }
+
   const clearAllFilters = () => {
     setSearchParams({})
   }
@@ -170,11 +186,8 @@ const ProductsPage = () => {
                       <input
                         type="radio"
                         name="price"
-                        checked={filters.minPrice == range.min && filters.maxPrice == range.max}
-                        onChange={() => {
-                          updateFilter('minPrice', range.min)
-                          updateFilter('maxPrice', range.max)
-                        }}
+                        checked={String(filters.minPrice) === String(range.min) && String(filters.maxPrice) === String(range.max)}
+                        onChange={() => updatePriceRange(range.min, range.max)}
                         className="w-4 h-4 text-primary-500 border-dark-300 focus:ring-primary-500"
                       />
                       <span className="text-sm text-dark-700">{range.label}</span>

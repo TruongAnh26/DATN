@@ -70,10 +70,10 @@ function App() {
     <Routes>
       {/* Public routes with main layout */}
       <Route path="/" element={<Layout />}>
-        <Route index element={<UserRoute><HomePage /></UserRoute>} />
-        <Route path="products" element={<UserRoute><ProductsPage /></UserRoute>} />
-        <Route path="products/:slug" element={<UserRoute><ProductDetailPage /></UserRoute>} />
-        <Route path="category/:slug" element={<UserRoute><CategoryPage /></UserRoute>} />
+        <Route index element={<HomePage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:slug" element={<ProductDetailPage />} />
+        <Route path="category/:slug" element={<CategoryPage />} />
         <Route path="cart" element={<UserRoute><CartPage /></UserRoute>} />
         <Route path="account" element={<UserRoute><AccountPage /></UserRoute>} />
         <Route path="orders" element={<UserRoute><OrdersPage /></UserRoute>} />

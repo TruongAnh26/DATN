@@ -263,7 +263,7 @@ const DashboardPage = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">{product.name}</p>
-                      <p className="text-sm text-gray-500">{product.viewCount || 0} lượt xem</p>
+                      {/* <p className="text-sm text-gray-500">{product.viewCount || 0} lượt xem</p> */}
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">{formatCurrency(product.salePrice || product.basePrice)}</p>

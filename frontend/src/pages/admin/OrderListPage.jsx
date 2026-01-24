@@ -122,25 +122,6 @@ const OrderListPage = () => {
     return texts[status] || status;
   };
 
-  const getPaymentStatusColor = (status) => {
-    const colors = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      PAID: 'bg-green-100 text-green-800',
-      FAILED: 'bg-red-100 text-red-800',
-      REFUNDED: 'bg-gray-100 text-gray-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPaymentStatusText = (status) => {
-    const texts = {
-      PENDING: 'Chờ thanh toán',
-      PAID: 'Đã thanh toán',
-      FAILED: 'Thất bại',
-      REFUNDED: 'Đã hoàn tiền',
-    };
-    return texts[status] || status;
-  };
 
   return (
     <div className="space-y-6">
@@ -196,9 +177,6 @@ const OrderListPage = () => {
                       Trạng thái
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Thanh toán
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ngày đặt
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -234,11 +212,6 @@ const OrderListPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
                           {getStatusText(order.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
-                          {getPaymentStatusText(order.paymentStatus)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

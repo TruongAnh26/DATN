@@ -158,7 +158,7 @@ const Header = () => {
 
               {/* Wishlist (Desktop) */}
               <Link 
-                to="/wishlist"
+                to="#"
                 className="hidden sm:flex p-2 hover:bg-primary-50 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 group"
                 aria-label="Yêu thích"
               >

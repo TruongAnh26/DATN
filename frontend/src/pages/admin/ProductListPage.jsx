@@ -23,9 +23,9 @@ const ProductListPage = () => {
     try {
       setLoading(true);
       const page = searchParams.get('page') || 0;
-      const search = searchParams.get('search') || '';
+      const keyword = searchParams.get('keyword') || '';
       
-      const response = await api.get(`/products?page=${page}&size=10&search=${search}`);
+      const response = await api.get(`/products?page=${page}&size=10&keyword=${keyword}`);
       const data = response.data?.data;
       
       setProducts(data?.content || []);
@@ -44,7 +44,7 @@ const ProductListPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchParams({ search: searchTerm, page: 0 });
+    setSearchParams({ keyword: searchTerm, page: 0 });
   };
 
   const handlePageChange = (newPage) => {
@@ -72,10 +72,15 @@ const ProductListPage = () => {
   };
 
   const getStatusBadge = (product) => {
-    if (!product.active) {
+    const isActive = product.status
+      ? product.status === 'ACTIVE'
+      : product.active === true;
+    const isFeatured = product.featured ?? product.isFeatured;
+
+    if (!isActive) {
       return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Ẩn</span>;
     }
-    if (product.featured) {
+    if (isFeatured) {
       return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">Nổi bật</span>;
     }
     return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">Đang bán</span>;
@@ -168,9 +173,9 @@ const ProductListPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Trạng thái
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Lượt xem
-                    </th>
+                    </th> */}
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Thao tác
                     </th>
@@ -222,9 +227,9 @@ const ProductListPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(product)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {product.viewCount || 0}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <Link

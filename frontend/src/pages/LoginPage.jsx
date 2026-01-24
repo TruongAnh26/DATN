@@ -18,32 +18,33 @@ const LoginPage = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, loginLoading, loginError, loginSuccess, loginMessage } = useSelector(
     (state) => state.auth
   )
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message || 'Đăng nhập thất bại')
+    if (loginError) {
+      toast.error(loginMessage || 'Đăng nhập thất bại')
+      return
     }
 
-    if (isSuccess || user) {
+    if (loginSuccess) {
       toast.success('Đăng nhập thành công!')
-      
-      // Check if user is admin
       const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ROLE_ADMIN')
-      
-      // Admin always redirects to dashboard, cannot access user pages
       if (isAdmin) {
         navigate('/admin')
       } else {
-        // Regular users redirect to their intended destination
         navigate(redirect)
       }
+      dispatch(reset())
+      return
     }
 
-    dispatch(reset())
-  }, [user, isError, isSuccess, message, navigate, dispatch, redirect])
+    if (user) {
+      const isAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ROLE_ADMIN')
+      navigate(isAdmin ? '/admin' : redirect)
+    }
+  }, [user, loginError, loginSuccess, loginMessage, navigate, dispatch, redirect])
 
   const handleChange = (e) => {
     setFormData({
@@ -54,26 +55,13 @@ const LoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    dispatch(reset())
     dispatch(login(formData))
   }
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-display font-bold text-2xl">K</span>
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-2xl text-dark-900">
-                Kids<span className="text-primary-500">Fashion</span>
-              </h1>
-            </div>
-          </Link>
-        </div>
-
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <h2 className="text-2xl font-display font-bold text-dark-900 text-center mb-2">
@@ -84,6 +72,11 @@ const LoginPage = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {loginError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3">
+                {loginMessage || 'Đăng nhập thất bại'}
+              </div>
+            )}
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-dark-700 mb-2">
@@ -110,7 +103,7 @@ const LoginPage = () => {
                   Mật khẩu
                 </label>
                 <Link 
-                  to="/forgot-password"
+                  to="#"
                   className="text-sm text-primary-500 hover:text-primary-600"
                 >
                   Quên mật khẩu?
@@ -140,10 +133,10 @@ const LoginPage = () => {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loginLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              {loginLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
 

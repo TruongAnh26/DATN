@@ -16,6 +16,11 @@ public class AdminBrandController {
 
     private final BrandRepository brandRepository;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<Iterable<Brand>>> getAllBrands() {
+        return ResponseEntity.ok(ApiResponse.success(brandRepository.findAll()));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Brand>> createBrand(@RequestBody Map<String, Object> request) {
         Brand brand = new Brand();

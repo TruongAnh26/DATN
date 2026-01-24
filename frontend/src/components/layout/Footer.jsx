@@ -168,8 +168,7 @@ const Footer = () => {
             <div className="mt-6">
               <p className="text-sm font-medium mb-3">Phương thức thanh toán</p>
               <div className="flex gap-2">
-                <div className="px-3 py-1.5 bg-dark-800 rounded text-xs">VNPay</div>
-                <div className="px-3 py-1.5 bg-dark-800 rounded text-xs">MoMo</div>
+                <div className="px-3 py-1.5 bg-dark-800 rounded text-xs">Stripe</div>
                 <div className="px-3 py-1.5 bg-dark-800 rounded text-xs">COD</div>
               </div>
             </div>

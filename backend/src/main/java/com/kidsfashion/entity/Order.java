@@ -1,7 +1,9 @@
 package com.kidsfashion.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kidsfashion.entity.enums.OrderStatus;
+import com.kidsfashion.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -99,6 +101,17 @@ public class Order extends BaseEntity {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Payment payment;
+
+    @JsonProperty("paymentStatus")
+    public PaymentStatus getPaymentStatus() {
+        if (payment != null) {
+            return payment.getStatus();
+        }
+        if ("COD".equalsIgnoreCase(paymentMethod)) {
+            return PaymentStatus.PENDING;
+        }
+        return null;
+    }
 
     // Helper methods
     public void addItem(OrderItem item) {

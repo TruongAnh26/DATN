@@ -21,6 +21,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     // Find root categories (no parent)
     List<Category> findByParentIsNullAndIsActiveTrueOrderBySortOrderAsc();
 
+    // Find root categories (no parent) including inactive
+    List<Category> findByParentIsNullOrderBySortOrderAsc();
+
     // Find children of a category
     List<Category> findByParentIdAndIsActiveTrueOrderBySortOrderAsc(Integer parentId);
 

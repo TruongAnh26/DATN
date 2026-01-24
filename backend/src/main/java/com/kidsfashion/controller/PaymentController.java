@@ -3,23 +3,89 @@ package com.kidsfashion.controller;
 import com.kidsfashion.dto.request.CreatePaymentRequest;
 import com.kidsfashion.dto.response.ApiResponse;
 import com.kidsfashion.dto.response.PaymentResponse;
+import com.kidsfashion.dto.response.StripePaymentResponse;
 import com.kidsfashion.service.PaymentService;
+import com.kidsfashion.service.StripeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/payments")
 @RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final StripeService stripeService;
+
+    // ==================== STRIPE ENDPOINTS ====================
 
     /**
-     * Create payment for an order
+     * Get Stripe publishable key for frontend
+     */
+    @GetMapping("/stripe/config")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getStripeConfig() {
+        Map<String, String> config = Map.of("publishableKey", stripeService.getPublishableKey());
+        return ResponseEntity.ok(ApiResponse.success(config));
+    }
+
+    /**
+     * Create Stripe PaymentIntent for card payments (Elements)
+     */
+    @PostMapping("/stripe/create-payment-intent")
+    public ResponseEntity<ApiResponse<StripePaymentResponse>> createStripePaymentIntent(
+            @RequestBody Map<String, Long> request) {
+        Long orderId = request.get("orderId");
+        StripePaymentResponse response = stripeService.createPaymentIntent(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Payment intent created", response));
+    }
+
+    /**
+     * Create Stripe Checkout Session (redirect to Stripe hosted page)
+     */
+    @PostMapping("/stripe/create-checkout-session")
+    public ResponseEntity<ApiResponse<StripePaymentResponse>> createStripeCheckoutSession(
+            @RequestBody Map<String, Long> request) {
+        Long orderId = request.get("orderId");
+        StripePaymentResponse response = stripeService.createCheckoutSession(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Checkout session created", response));
+    }
+
+    /**
+     * Stripe webhook handler
+     */
+    @PostMapping("/stripe/webhook")
+    public ResponseEntity<String> handleStripeWebhook(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader) {
+        try {
+            stripeService.handleWebhook(payload, sigHeader);
+            return ResponseEntity.ok("Webhook handled");
+        } catch (Exception e) {
+            log.error("Webhook error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Webhook error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Verify Stripe payment status
+     */
+    @GetMapping("/stripe/verify/{paymentIntentId}")
+    public ResponseEntity<ApiResponse<StripePaymentResponse>> verifyStripePayment(
+            @PathVariable String paymentIntentId) {
+        StripePaymentResponse response = stripeService.verifyPayment(paymentIntentId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // ==================== LEGACY ENDPOINTS ====================
+
+    /**
+     * Create payment for an order (legacy - COD only now)
      */
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
@@ -35,37 +101,5 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderId(@PathVariable Long orderId) {
         PaymentResponse payment = paymentService.getPaymentByOrderId(orderId);
         return ResponseEntity.ok(ApiResponse.success(payment));
-    }
-
-    /**
-     * VNPay payment callback
-     */
-    @GetMapping("/callback/vnpay")
-    public ResponseEntity<ApiResponse<PaymentResponse>> vnpayCallback(
-            @RequestParam Map<String, String> params) {
-        PaymentResponse payment = paymentService.handleVNPayCallback(params);
-        return ResponseEntity.ok(ApiResponse.success("Payment processed", payment));
-    }
-
-    /**
-     * MoMo payment callback (IPN)
-     */
-    @PostMapping("/callback/momo")
-    public ResponseEntity<ApiResponse<PaymentResponse>> momoCallback(
-            @RequestBody Map<String, Object> params) {
-        PaymentResponse payment = paymentService.handleMoMoCallback(params);
-        return ResponseEntity.ok(ApiResponse.success("Payment processed", payment));
-    }
-
-    /**
-     * Test QR code generation (for debugging)
-     */
-    @GetMapping("/test-qr")
-    public ResponseEntity<ApiResponse<Map<String, String>>> testQRCode() {
-        String qrCode = paymentService.testQRCodeGeneration();
-        Map<String, String> result = new java.util.HashMap<>();
-        result.put("qrCode", qrCode);
-        result.put("status", qrCode != null ? "SUCCESS" : "FAILED");
-        return ResponseEntity.ok(ApiResponse.success("QR code test", result));
     }
 }

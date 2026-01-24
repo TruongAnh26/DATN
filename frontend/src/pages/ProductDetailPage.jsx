@@ -30,6 +30,7 @@ const ProductDetailPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false)
 
   useEffect(() => {
     dispatch(getProductBySlug(slug))
@@ -45,6 +46,10 @@ const ProductDetailPage = () => {
   }, [dispatch, product?.id])
 
   useEffect(() => {
+    setSelectedImage(0)
+  }, [product?.id])
+
+  useEffect(() => {
     // Find variant when size and color are selected
     if (product?.variants && selectedSize && selectedColor) {
       const variant = product.variants.find(
@@ -56,20 +61,21 @@ const ProductDetailPage = () => {
     }
   }, [product, selectedSize, selectedColor])
 
-  // Get unique sizes and colors
-  const availableSizes = product?.variants
-    ? [...new Map(product.variants.map(v => [v.size.id, v.size])).values()]
+  // Get unique sizes and colors (only in-stock variants)
+  const inStockVariants = product?.variants?.filter(v => v.inStock) || []
+  const availableSizes = inStockVariants.length
+    ? [...new Map(inStockVariants.map(v => [v.size.id, v.size])).values()]
     : []
   
-  const availableColors = product?.variants
-    ? [...new Map(product.variants.map(v => [v.color.id, v.color])).values()]
+  const availableColors = inStockVariants.length
+    ? [...new Map(inStockVariants.map(v => [v.color.id, v.color])).values()]
     : []
 
   // Get available colors for selected size
   const getColorsForSize = (sizeId) => {
-    if (!product?.variants) return []
-    return product.variants
-      .filter(v => v.size.id === sizeId && v.inStock)
+    if (!inStockVariants.length) return []
+    return inStockVariants
+      .filter(v => v.size.id === sizeId)
       .map(v => v.color.id)
   }
 
@@ -130,6 +136,17 @@ const ProductDetailPage = () => {
     return url;
   };
 
+  const getSelectedImageUrl = () => {
+    const images = product?.images || []
+    const selected = images[selectedImage]
+    if (selected?.imageUrl || selected?.url) {
+      return getImageUrl(selected.imageUrl || selected.url)
+    }
+    return getImageUrl(product?.primaryImageUrl)
+  }
+
+  console.log(product);
+
   return (
     <div className="min-h-screen bg-cream">
       {/* Breadcrumb */}
@@ -152,7 +169,7 @@ const ProductDetailPage = () => {
             {/* Main Image */}
             <div className="aspect-square bg-white rounded-2xl overflow-hidden">
               <img
-                src={getImageUrl(product?.primaryImageUrl) || '/placeholder-product.jpg'}
+                src={getSelectedImageUrl() || '/placeholder-product.jpg'}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -163,14 +180,14 @@ const ProductDetailPage = () => {
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((image, index) => (
                   <button
-                    key={image.id}
+                    key={image.id || index}
                     onClick={() => setSelectedImage(index)}
                     className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
                       selectedImage === index ? 'border-primary-500' : 'border-transparent'
                     }`}
                   >
                     <img
-                      src={image.imageUrl}
+                      src={getImageUrl(image.imageUrl || image.url)}
                       alt={`${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -223,7 +240,11 @@ const ProductDetailPage = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-medium">Kích cỡ</span>
-                <button className="text-sm text-primary-500 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => setIsSizeGuideOpen(true)}
+                  className="text-sm text-primary-500 hover:underline"
+                >
                   Hướng dẫn chọn size
                 </button>
               </div>
@@ -369,6 +390,32 @@ const ProductDetailPage = () => {
           </div>
         )}
       </div>
+      {isSizeGuideOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsSizeGuideOpen(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-3xl w-full p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-dark-900">Hướng dẫn chọn size</h3>
+              <button
+                type="button"
+                onClick={() => setIsSizeGuideOpen(false)}
+                className="p-2 text-dark-500 hover:text-dark-900"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <img
+              src="/size-guide.svg"
+              alt="Size guide"
+              className="w-full h-auto rounded-lg border border-dark-100"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -59,6 +59,13 @@ public class AdminUserController {
         if (statusStr != null) {
             try {
                 UserStatus newStatus = UserStatus.valueOf(statusStr);
+                boolean isAdmin = user.getRoles().stream()
+                        .map(role -> role.getName())
+                        .anyMatch(role -> "ADMIN".equals(role) || "ROLE_ADMIN".equals(role));
+                if (isAdmin && newStatus == UserStatus.LOCKED) {
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("Không thể khóa tài khoản admin"));
+                }
                 user.setStatus(newStatus);
                 userRepository.save(user);
             } catch (Exception e) {

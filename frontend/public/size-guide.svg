@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="Size guide">
+  <rect width="900" height="600" fill="#ffffff"/>
+  <rect x="40" y="40" width="820" height="520" fill="#f9fafb" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="450" y="110" font-family="Arial, Helvetica, sans-serif" font-size="36" fill="#111827" text-anchor="middle">
+    SIZE GUIDE
+  </text>
+  <text x="450" y="160" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle">
+    Use this chart to choose the right size.
+  </text>
+
+  <rect x="100" y="210" width="700" height="260" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+  <line x1="100" y1="260" x2="800" y2="260" stroke="#e5e7eb" stroke-width="1.5"/>
+  <line x1="100" y1="310" x2="800" y2="310" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="100" y1="360" x2="800" y2="360" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="100" y1="410" x2="800" y2="410" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="100" y1="460" x2="800" y2="460" stroke="#e5e7eb" stroke-width="1"/>
+
+  <line x1="250" y1="210" x2="250" y2="470" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="450" y1="210" x2="450" y2="470" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="650" y1="210" x2="650" y2="470" stroke="#e5e7eb" stroke-width="1"/>
+
+  <text x="175" y="242" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111827" text-anchor="middle">SIZE</text>
+  <text x="350" y="242" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111827" text-anchor="middle">HEIGHT (CM)</text>
+  <text x="550" y="242" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111827" text-anchor="middle">WEIGHT (KG)</text>
+  <text x="725" y="242" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#111827" text-anchor="middle">AGE</text>
+
+  <text x="175" y="292" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">S</text>
+  <text x="350" y="292" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">90 - 100</text>
+  <text x="550" y="292" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">12 - 14</text>
+  <text x="725" y="292" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">2 - 3</text>
+
+  <text x="175" y="342" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">M</text>
+  <text x="350" y="342" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">100 - 110</text>
+  <text x="550" y="342" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">14 - 16</text>
+  <text x="725" y="342" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">3 - 4</text>
+
+  <text x="175" y="392" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">L</text>
+  <text x="350" y="392" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">110 - 120</text>
+  <text x="550" y="392" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">16 - 18</text>
+  <text x="725" y="392" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">4 - 5</text>
+
+  <text x="175" y="442" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">XL</text>
+  <text x="350" y="442" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">120 - 130</text>
+  <text x="550" y="442" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">18 - 20</text>
+  <text x="725" y="442" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#374151" text-anchor="middle">5 - 6</text>
+</svg>

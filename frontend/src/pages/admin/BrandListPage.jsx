@@ -3,6 +3,8 @@ import api from '../../services/api';
 
 const BrandListPage = () => {
   const [brands, setBrands] = useState([]);
+  console.log(brands);
+
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, mode: 'add', brand: null });
   const [formData, setFormData] = useState({
@@ -10,10 +12,10 @@ const BrandListPage = () => {
     slug: '',
     description: '',
     logoUrl: '',
-    websiteUrl: '',
     active: true,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchBrands();
@@ -22,7 +24,7 @@ const BrandListPage = () => {
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/brands');
+      const response = await api.get('/admin/brands');
       setBrands(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching brands:', error);
@@ -38,8 +40,7 @@ const BrandListPage = () => {
         slug: brand.slug || '',
         description: brand.description || '',
         logoUrl: brand.logoUrl || '',
-        websiteUrl: brand.websiteUrl || '',
-        active: brand.active !== false,
+        active: brand.isActive !== false,
       });
     } else {
       setFormData({
@@ -47,7 +48,6 @@ const BrandListPage = () => {
         slug: '',
         description: '',
         logoUrl: '',
-        websiteUrl: '',
         active: true,
       });
     }
@@ -78,6 +78,66 @@ const BrandListPage = () => {
         .trim();
       setFormData(prev => ({ ...prev, slug }));
     }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('/uploads')) {
+      return `http://localhost:8080/api${url}`;
+    }
+    if (url.startsWith('/')) {
+      return `http://localhost:8080/api/uploads${url}`;
+    }
+    return url;
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file hình ảnh');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước file không được vượt quá 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await api.post('/uploads/images', formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data?.success) {
+        const imageData = response.data.data;
+        setFormData(prev => ({
+          ...prev,
+          logoUrl: imageData.url,
+        }));
+      }
+
+      e.target.value = '';
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Có lỗi khi tải ảnh lên');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      logoUrl: '',
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -152,9 +212,12 @@ const BrandListPage = () => {
                   <div className="flex items-center space-x-3">
                     {brand.logoUrl ? (
                       <img
-                        src={brand.logoUrl}
+                        src={getImageUrl(brand.logoUrl)}
                         alt={brand.name}
                         className="w-12 h-12 object-contain rounded-lg bg-gray-50"
+                        onError={(e) => {
+                          e.target.src = 'https://placehold.co/100x100?text=No+Image';
+                        }}
                       />
                     ) : (
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -192,20 +255,10 @@ const BrandListPage = () => {
                 )}
                 <div className="mt-3 flex items-center justify-between">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    brand.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                    brand.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {brand.active ? 'Đang hoạt động' : 'Tạm ẩn'}
+                    {brand.isActive ? 'Đang hoạt động' : 'Tạm ẩn'}
                   </span>
-                  {brand.websiteUrl && (
-                    <a
-                      href={brand.websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Website →
-                    </a>
-                  )}
                 </div>
               </div>
             ))}
@@ -280,31 +333,59 @@ const BrandListPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    URL Logo
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Logo thương hiệu
                   </label>
-                  <input
-                    type="url"
-                    name="logoUrl"
-                    value={formData.logoUrl}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://..."
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Website
+                  {formData.logoUrl && (
+                    <div className="mb-3 relative inline-block">
+                      <img
+                        src={getImageUrl(formData.logoUrl)}
+                        alt="Preview"
+                        className="w-32 h-32 object-contain rounded-lg border-2 border-gray-200 bg-white"
+                        onError={(e) => {
+                          e.target.src = 'https://placehold.co/150x150?text=No+Image';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        title="Xóa ảnh"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  <label className="flex flex-col items-center justify-center px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                    {uploading ? (
+                      <div className="flex items-center">
+                        <svg className="animate-spin h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-blue-600">Đang tải lên...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-gray-600 text-sm">Nhấn để chọn ảnh hoặc kéo thả</span>
+                        <span className="text-gray-400 text-xs mt-1">PNG, JPG, GIF tối đa 5MB</span>
+                      </>
+                    )}
                   </label>
-                  <input
-                    type="url"
-                    name="websiteUrl"
-                    value={formData.websiteUrl}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://..."
-                  />
                 </div>
 
                 <div>

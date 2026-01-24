@@ -24,5 +24,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     // Count total items sold
     @Query("SELECT COALESCE(SUM(oi.quantity), 0) FROM OrderItem oi JOIN oi.order o WHERE o.status = 'COMPLETED'")
     long countTotalItemsSold();
+
+    // Check if variant is used in any order
+    @Query("SELECT COUNT(oi) > 0 FROM OrderItem oi WHERE oi.variant.id = :variantId")
+    boolean existsByVariantId(@Param("variantId") Long variantId);
 }
 

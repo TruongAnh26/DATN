@@ -12,6 +12,14 @@ const initialState = {
   isError: false,
   isSuccess: false,
   message: '',
+  loginLoading: false,
+  loginError: false,
+  loginSuccess: false,
+  loginMessage: '',
+  registerLoading: false,
+  registerError: false,
+  registerSuccess: false,
+  registerMessage: '',
 }
 
 // Register user
@@ -67,6 +75,14 @@ const authSlice = createSlice({
       state.isError = false
       state.isSuccess = false
       state.message = ''
+      state.loginLoading = false
+      state.loginError = false
+      state.loginSuccess = false
+      state.loginMessage = ''
+      state.registerLoading = false
+      state.registerError = false
+      state.registerSuccess = false
+      state.registerMessage = ''
     },
   },
   extraReducers: (builder) => {
@@ -74,10 +90,16 @@ const authSlice = createSlice({
       // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true
+        state.registerLoading = true
+        state.registerError = false
+        state.registerSuccess = false
+        state.registerMessage = ''
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false
         state.isSuccess = true
+        state.registerLoading = false
+        state.registerSuccess = true
         state.user = action.payload.user
         state.token = action.payload.accessToken
       })
@@ -85,16 +107,25 @@ const authSlice = createSlice({
         state.isLoading = false
         state.isError = true
         state.message = action.payload
+        state.registerLoading = false
+        state.registerError = true
+        state.registerMessage = action.payload
         state.user = null
         state.token = null
       })
       // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true
+        state.loginLoading = true
+        state.loginError = false
+        state.loginSuccess = false
+        state.loginMessage = ''
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false
         state.isSuccess = true
+        state.loginLoading = false
+        state.loginSuccess = true
         state.user = action.payload.user
         state.token = action.payload.accessToken
       })
@@ -102,6 +133,9 @@ const authSlice = createSlice({
         state.isLoading = false
         state.isError = true
         state.message = action.payload
+        state.loginLoading = false
+        state.loginError = true
+        state.loginMessage = action.payload
         state.user = null
         state.token = null
       })

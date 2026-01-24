@@ -56,8 +56,8 @@ const UserListPage = () => {
   const getStatusColor = (status) => {
     const colors = {
       ACTIVE: 'bg-green-100 text-green-800',
-      INACTIVE: 'bg-gray-100 text-gray-600',
-      SUSPENDED: 'bg-red-100 text-red-800',
+      PENDING: 'bg-gray-100 text-gray-600',
+      LOCKED: 'bg-red-100 text-red-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-600';
   };
@@ -65,8 +65,8 @@ const UserListPage = () => {
   const getStatusText = (status) => {
     const texts = {
       ACTIVE: 'Hoạt động',
-      INACTIVE: 'Chưa kích hoạt',
-      SUSPENDED: 'Đã khóa',
+      PENDING: 'Chưa kích hoạt',
+      LOCKED: 'Đã khóa',
     };
     return texts[status] || status;
   };
@@ -190,27 +190,40 @@ const UserListPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          {user.status === 'ACTIVE' ? (
-                            <button
-                              onClick={() => handleStatusChange(user.id, 'SUSPENDED')}
-                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Khóa tài khoản"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                              </svg>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleStatusChange(user.id, 'ACTIVE')}
-                              className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Kích hoạt tài khoản"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </button>
-                          )}
+                          {(() => {
+                            const isAdminUser = user.roles?.includes('ADMIN') || user.roles?.includes('ROLE_ADMIN');
+                            if (user.status === 'ACTIVE') {
+                              if (isAdminUser) {
+                                return (
+                                  <span className="text-xs text-gray-400" title="Không thể khóa tài khoản admin">
+                                    Admin
+                                  </span>
+                                );
+                              }
+                              return (
+                                <button
+                                  onClick={() => handleStatusChange(user.id, 'LOCKED')}
+                                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Khóa tài khoản"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                  </svg>
+                                </button>
+                              );
+                            }
+                            return (
+                              <button
+                                onClick={() => handleStatusChange(user.id, 'ACTIVE')}
+                                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Kích hoạt tài khoản"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </button>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>

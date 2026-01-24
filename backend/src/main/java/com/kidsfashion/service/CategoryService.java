@@ -21,7 +21,15 @@ public class CategoryService {
     public List<CategoryTreeResponse> getCategoryTree() {
         List<Category> rootCategories = categoryRepository.findByParentIsNullAndIsActiveTrueOrderBySortOrderAsc();
         return rootCategories.stream()
-                .map(this::mapToCategoryTree)
+                .map(category -> mapToCategoryTree(category, false))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryTreeResponse> getCategoryTreeForAdmin() {
+        List<Category> rootCategories = categoryRepository.findByParentIsNullOrderBySortOrderAsc();
+        return rootCategories.stream()
+                .map(category -> mapToCategoryTree(category, true))
                 .collect(Collectors.toList());
     }
 
@@ -29,7 +37,7 @@ public class CategoryService {
     public CategoryTreeResponse getCategoryBySlug(String slug) {
         Category category = categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found: " + slug));
-        return mapToCategoryTree(category);
+        return mapToCategoryTree(category, false);
     }
 
     @Transactional(readOnly = true)
@@ -39,14 +47,14 @@ public class CategoryService {
 
         List<Category> children = categoryRepository.findByParentIdAndIsActiveTrueOrderBySortOrderAsc(parent.getId());
         return children.stream()
-                .map(this::mapToCategoryTree)
+                .map(category -> mapToCategoryTree(category, false))
                 .collect(Collectors.toList());
     }
 
-    private CategoryTreeResponse mapToCategoryTree(Category category) {
+    private CategoryTreeResponse mapToCategoryTree(Category category, boolean includeInactive) {
         List<CategoryTreeResponse> children = category.getChildren().stream()
-                .filter(Category::getIsActive)
-                .map(this::mapToCategoryTree)
+                .filter(child -> includeInactive || Boolean.TRUE.equals(child.getIsActive()))
+                .map(child -> mapToCategoryTree(child, includeInactive))
                 .collect(Collectors.toList());
 
         return CategoryTreeResponse.builder()

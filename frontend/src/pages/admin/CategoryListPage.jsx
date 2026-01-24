@@ -24,7 +24,7 @@ const CategoryListPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/categories/tree');
+      const response = await api.get('/admin/categories/tree');
       setCategories(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);

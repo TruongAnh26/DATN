@@ -23,16 +23,16 @@ const RegisterPage = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, registerLoading, registerError, registerSuccess, registerMessage } = useSelector(
     (state) => state.auth
   )
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message || 'Đăng ký thất bại')
+    if (registerError) {
+      toast.error(registerMessage || 'Đăng ký thất bại')
     }
 
-    if (isSuccess || user) {
+    if (registerSuccess || user) {
       toast.success('Đăng ký thành công!')
       
       // Check if user is admin (shouldn't happen on register, but just in case)
@@ -48,7 +48,7 @@ const RegisterPage = () => {
     }
 
     dispatch(reset())
-  }, [user, isError, isSuccess, message, navigate, dispatch, redirect])
+  }, [user, registerError, registerSuccess, registerMessage, navigate, dispatch, redirect])
 
   const handleChange = (e) => {
     setFormData({
@@ -103,20 +103,6 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-display font-bold text-2xl">K</span>
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-2xl text-dark-900">
-                Kids<span className="text-primary-500">Fashion</span>
-              </h1>
-            </div>
-          </Link>
-        </div>
-
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <h2 className="text-2xl font-display font-bold text-dark-900 text-center mb-2">
@@ -127,6 +113,11 @@ const RegisterPage = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {registerError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3">
+                {registerMessage || 'Đăng ký thất bại'}
+              </div>
+            )}
             {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-dark-700 mb-2">
@@ -266,10 +257,10 @@ const RegisterPage = () => {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={registerLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
+              {registerLoading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
             </button>
           </form>
 

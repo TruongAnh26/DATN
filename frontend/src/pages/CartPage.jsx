@@ -245,8 +245,7 @@ const CartPage = () => {
               <div className="mt-4 flex items-center justify-center gap-3">
                 <span className="text-xs text-dark-400">Chấp nhận:</span>
                 <div className="flex gap-2">
-                  <span className="px-2 py-1 bg-dark-100 rounded text-xs">VNPay</span>
-                  <span className="px-2 py-1 bg-dark-100 rounded text-xs">MoMo</span>
+                  <span className="px-2 py-1 bg-dark-100 rounded text-xs">Stripe</span>
                   <span className="px-2 py-1 bg-dark-100 rounded text-xs">COD</span>
                 </div>
               </div>

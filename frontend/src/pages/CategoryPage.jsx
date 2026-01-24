@@ -2,14 +2,14 @@ import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { ChevronRight } from 'lucide-react'
-import { getProducts } from '../store/slices/productSlice'
+import { getCategories, getProducts } from '../store/slices/productSlice'
 import ProductGrid from '../components/product/ProductGrid'
 
 const CategoryPage = () => {
   const { slug } = useParams()
   const dispatch = useDispatch()
   
-  const { products, isLoading } = useSelector((state) => state.product)
+  const { products, isLoading, categories } = useSelector((state) => state.product)
 
   const categoryInfo = {
     boys: { 
@@ -38,7 +38,30 @@ const CategoryPage = () => {
     },
   }
 
-  const category = categoryInfo[slug] || { name: slug, icon: '🛍️', description: '' }
+  const findCategoryBySlug = (cats, targetSlug) => {
+    for (const cat of cats || []) {
+      if (cat.slug === targetSlug) return cat
+      if (cat.children?.length) {
+        const found = findCategoryBySlug(cat.children, targetSlug)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const matchedCategory = findCategoryBySlug(categories, slug)
+  const category = categoryInfo[slug] || {
+    name: matchedCategory?.name || slug,
+    icon: '🛍️',
+    description: matchedCategory?.description || '',
+    banner: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1200&h=300&fit=crop',
+  }
+
+  useEffect(() => {
+    if (!categories?.length) {
+      dispatch(getCategories())
+    }
+  }, [dispatch, categories?.length])
 
   useEffect(() => {
     const filters = {
@@ -52,10 +75,15 @@ const CategoryPage = () => {
       filters.gender = 'GIRLS'
     } else if (slug === 'sale') {
       filters.onSale = true
+    } else if (matchedCategory?.id) {
+      filters.categoryIds = [matchedCategory.id]
+    } else if (!categoryInfo[slug]) {
+      // Wait for categories to load when slug is not a predefined filter
+      return
     }
 
     dispatch(getProducts(filters))
-  }, [dispatch, slug])
+  }, [dispatch, slug, matchedCategory?.id])
 
   return (
     <div className="min-h-screen bg-cream">

@@ -30,6 +30,7 @@ public class AdminProductController {
     private final ProductImageRepository productImageRepository;
     private final ProductVariantRepository productVariantRepository;
     private final InventoryRepository inventoryRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProduct(@PathVariable Long id) {
@@ -169,13 +170,7 @@ public class AdminProductController {
         
         // Update variants if provided
         if (dto.getVariants() != null) {
-            // Delete old variants and their inventory
-            List<ProductVariant> oldVariants = productVariantRepository.findByProductId(id);
-            for (ProductVariant v : oldVariants) {
-                inventoryRepository.deleteByVariantId(v.getId());
-            }
-            productVariantRepository.deleteByProductId(id);
-            saveProductVariants(savedProduct, dto.getVariants());
+            updateProductVariants(savedProduct, dto.getVariants());
         }
         
         // Return simple response to avoid serialization issues
@@ -262,42 +257,121 @@ public class AdminProductController {
         productImageRepository.saveAll(productImages);
     }
 
-    private void saveProductVariants(Product product, List<Map<String, Object>> variants) {
-        for (Map<String, Object> v : variants) {
-            Long sizeId = Long.valueOf(v.get("sizeId").toString());
-            Long colorId = Long.valueOf(v.get("colorId").toString());
+    private void updateProductVariants(Product product, List<Map<String, Object>> newVariants) {
+        List<ProductVariant> oldVariants = productVariantRepository.findByProductId(product.getId());
+        
+        // Create a map of new variants by (sizeId, colorId) for quick lookup
+        Map<String, Map<String, Object>> newVariantMap = new HashMap<>();
+        for (Map<String, Object> v : newVariants) {
+            // Normalize IDs to Integer for consistent key comparison
+            Integer sizeId = Integer.valueOf(v.get("sizeId").toString());
+            Integer colorId = Integer.valueOf(v.get("colorId").toString());
+            String key = sizeId + "-" + colorId;
+            newVariantMap.put(key, v);
+        }
+        
+        // Process old variants
+        for (ProductVariant oldVariant : oldVariants) {
+            String key = oldVariant.getSize().getId() + "-" + oldVariant.getColor().getId();
+            Map<String, Object> newVariantData = newVariantMap.get(key);
             
-            Size size = sizeRepository.findById(sizeId).orElse(null);
-            Color color = colorRepository.findById(colorId).orElse(null);
-            
-            if (size == null || color == null) continue;
-            
-            ProductVariant variant = new ProductVariant();
-            variant.setProduct(product);
-            variant.setSize(size);
-            variant.setColor(color);
-            variant.setSkuVariant(product.getSku() + "-" + size.getName() + "-" + color.getName());
-            
-            Object priceAdjustment = v.get("priceAdjustment");
-            if (priceAdjustment != null) {
-                variant.setPriceAdjustment(BigDecimal.valueOf(Double.parseDouble(priceAdjustment.toString())));
+            if (newVariantData != null) {
+                // Variant exists in both old and new - update it
+                updateVariant(oldVariant, newVariantData, product);
+                newVariantMap.remove(key); // Mark as processed
             } else {
-                variant.setPriceAdjustment(BigDecimal.ZERO);
+                // Variant not in new list - check if it's used in orders
+                if (orderItemRepository.existsByVariantId(oldVariant.getId())) {
+                    // Variant is used in orders - mark as inactive instead of deleting
+                    oldVariant.setIsActive(false);
+                    productVariantRepository.save(oldVariant);
+                } else {
+                    // Variant not used in orders - safe to delete
+                    inventoryRepository.deleteByVariantId(oldVariant.getId());
+                    productVariantRepository.delete(oldVariant);
+                }
             }
-            
-            variant.setIsActive(true);
-            ProductVariant savedVariant = productVariantRepository.save(variant);
-            
-            // Create inventory
-            Object quantity = v.get("quantity");
-            if (quantity != null) {
-                Inventory inventory = new Inventory();
-                inventory.setVariant(savedVariant);
-                inventory.setQuantity(Integer.parseInt(quantity.toString()));
+        }
+        
+        // Create new variants that don't exist yet
+        for (Map<String, Object> v : newVariantMap.values()) {
+            createVariant(product, v);
+        }
+    }
+    
+    private void updateVariant(ProductVariant variant, Map<String, Object> variantData, Product product) {
+        // Update price adjustment
+        Object priceAdjustment = variantData.get("priceAdjustment");
+        if (priceAdjustment != null) {
+            variant.setPriceAdjustment(BigDecimal.valueOf(Double.parseDouble(priceAdjustment.toString())));
+        } else {
+            variant.setPriceAdjustment(BigDecimal.ZERO);
+        }
+        
+        // Update SKU in case product SKU changed
+        variant.setSkuVariant(product.getSku() + "-" + variant.getSize().getName() + "-" + variant.getColor().getName());
+        variant.setIsActive(true);
+        productVariantRepository.save(variant);
+        
+        // Update inventory
+        Object quantity = variantData.get("quantity");
+        Inventory inventory = inventoryRepository.findByVariantId(variant.getId()).orElse(null);
+        if (quantity != null) {
+            int qty = Integer.parseInt(quantity.toString());
+            if (inventory != null) {
+                inventory.setQuantity(qty);
+                inventoryRepository.save(inventory);
+            } else {
+                inventory = new Inventory();
+                inventory.setVariant(variant);
+                inventory.setQuantity(qty);
                 inventory.setReservedQuantity(0);
                 inventory.setLowStockThreshold(5);
                 inventoryRepository.save(inventory);
             }
+        }
+    }
+    
+    private void createVariant(Product product, Map<String, Object> variantData) {
+        Long sizeId = Long.valueOf(variantData.get("sizeId").toString());
+        Long colorId = Long.valueOf(variantData.get("colorId").toString());
+        
+        Size size = sizeRepository.findById(sizeId).orElse(null);
+        Color color = colorRepository.findById(colorId).orElse(null);
+        
+        if (size == null || color == null) return;
+        
+        ProductVariant variant = new ProductVariant();
+        variant.setProduct(product);
+        variant.setSize(size);
+        variant.setColor(color);
+        variant.setSkuVariant(product.getSku() + "-" + size.getName() + "-" + color.getName());
+        
+        Object priceAdjustment = variantData.get("priceAdjustment");
+        if (priceAdjustment != null) {
+            variant.setPriceAdjustment(BigDecimal.valueOf(Double.parseDouble(priceAdjustment.toString())));
+        } else {
+            variant.setPriceAdjustment(BigDecimal.ZERO);
+        }
+        
+        variant.setIsActive(true);
+        ProductVariant savedVariant = productVariantRepository.save(variant);
+        
+        // Create inventory
+        Object quantity = variantData.get("quantity");
+        if (quantity != null) {
+            Inventory inventory = new Inventory();
+            inventory.setVariant(savedVariant);
+            inventory.setQuantity(Integer.parseInt(quantity.toString()));
+            inventory.setReservedQuantity(0);
+            inventory.setLowStockThreshold(5);
+            inventoryRepository.save(inventory);
+        }
+    }
+
+    private void saveProductVariants(Product product, List<Map<String, Object>> variants) {
+        for (Map<String, Object> v : variants) {
+            createVariant(product, v);
         }
     }
 
