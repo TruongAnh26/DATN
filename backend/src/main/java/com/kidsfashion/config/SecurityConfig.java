@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/payments/**").permitAll()
                         
                         // Public endpoints
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/reset-admin").permitAll()
                         .requestMatchers("/seed/**").permitAll()  // Dev only - remove in production
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
                         

@@ -1,5 +1,6 @@
 package com.kidsfashion.controller;
 
+import com.kidsfashion.dto.request.ChangePasswordRequest;
 import com.kidsfashion.dto.request.LoginRequest;
 import com.kidsfashion.dto.request.RegisterRequest;
 import com.kidsfashion.dto.response.ApiResponse;
@@ -35,6 +36,14 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         AuthResponse response = authService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("Đổi mật khẩu thành công"));
     }
 
     /**

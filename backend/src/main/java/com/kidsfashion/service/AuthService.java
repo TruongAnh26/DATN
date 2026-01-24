@@ -1,5 +1,6 @@
 package com.kidsfashion.service;
 
+import com.kidsfashion.dto.request.ChangePasswordRequest;
 import com.kidsfashion.dto.request.LoginRequest;
 import com.kidsfashion.dto.request.RegisterRequest;
 import com.kidsfashion.dto.response.AuthResponse;
@@ -82,6 +83,21 @@ public class AuthService {
         return AuthResponse.builder()
                 .user(buildUserResponse(user))
                 .build();
+    }
+
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
+        }
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     private AuthResponse buildAuthResponse(String token, User user) {

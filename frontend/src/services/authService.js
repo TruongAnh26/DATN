@@ -28,11 +28,17 @@ const getCurrentUser = async () => {
   return response.data.data
 }
 
+const changePassword = async (payload) => {
+  const response = await api.post('/auth/change-password', payload)
+  return response.data
+}
+
 const authService = {
   register,
   login,
   logout,
   getCurrentUser,
+  changePassword,
 }
 
 export default authService

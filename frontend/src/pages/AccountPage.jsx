@@ -17,8 +17,9 @@ import {
 import toast from 'react-hot-toast'
 import { logout } from '../store/slices/authSlice'
 import orderService from '../services/orderService'
+import authService from '../services/authService'
 
-const AccountPage = () => {
+export default function AccountPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
@@ -26,6 +27,13 @@ const AccountPage = () => {
   const [recentOrders, setRecentOrders] = useState([])
   const [isLoadingOrders, setIsLoadingOrders] = useState(false)
   const [addresses, setAddresses] = useState([])
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [passwordErrors, setPasswordErrors] = useState({})
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -74,6 +82,46 @@ const AccountPage = () => {
     dispatch(logout())
     toast.success('Đã đăng xuất!')
     navigate('/')
+  }
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target
+    setPasswordForm(prev => ({ ...prev, [name]: value }))
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  const validatePasswordForm = () => {
+    const errors = {}
+    if (!passwordForm.currentPassword) {
+      errors.currentPassword = 'Vui lòng nhập mật khẩu hiện tại'
+    }
+    if (!passwordForm.newPassword) {
+      errors.newPassword = 'Vui lòng nhập mật khẩu mới'
+    } else if (passwordForm.newPassword.length < 6) {
+      errors.newPassword = 'Mật khẩu mới phải có ít nhất 6 ký tự'
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Mật khẩu xác nhận không khớp'
+    }
+    setPasswordErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!validatePasswordForm()) return
+    setIsChangingPassword(true)
+    try {
+      await authService.changePassword(passwordForm)
+      toast.success('Đổi mật khẩu thành công')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setPasswordErrors({})
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không thể đổi mật khẩu')
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
   if (!user) {
@@ -306,22 +354,51 @@ const AccountPage = () => {
               <div className="bg-sand rounded-xl p-4">
                 <h3 className="font-semibold mb-3">Đổi mật khẩu</h3>
                 <div className="space-y-3">
+                  {passwordErrors.form && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3">
+                      {passwordErrors.form}
+                    </div>
+                  )}
                   <input 
                     type="password" 
                     placeholder="Mật khẩu hiện tại" 
-                    className="input"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    className={`input ${passwordErrors.currentPassword ? 'input-error' : ''}`}
                   />
+                  {passwordErrors.currentPassword && (
+                    <p className="text-red-500 text-sm">{passwordErrors.currentPassword}</p>
+                  )}
                   <input 
                     type="password" 
                     placeholder="Mật khẩu mới" 
-                    className="input"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordChange}
+                    className={`input ${passwordErrors.newPassword ? 'input-error' : ''}`}
                   />
+                  {passwordErrors.newPassword && (
+                    <p className="text-red-500 text-sm">{passwordErrors.newPassword}</p>
+                  )}
                   <input 
                     type="password" 
                     placeholder="Xác nhận mật khẩu mới" 
-                    className="input"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className={`input ${passwordErrors.confirmPassword ? 'input-error' : ''}`}
                   />
-                  <button className="btn-primary">Cập nhật mật khẩu</button>
+                  {passwordErrors.confirmPassword && (
+                    <p className="text-red-500 text-sm">{passwordErrors.confirmPassword}</p>
+                  )}
+                  <button
+                    className="btn-primary"
+                    disabled={isChangingPassword}
+                    onClick={handleUpdatePassword}
+                  >
+                    {isChangingPassword ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
+                  </button>
                 </div>
               </div>
 
@@ -339,7 +416,7 @@ const AccountPage = () => {
                 </div>
               </div>
 
-              <div className="bg-red-50 rounded-xl p-4">
+              {/* <div className="bg-red-50 rounded-xl p-4">
                 <h3 className="font-semibold text-red-600 mb-2">Xóa tài khoản</h3>
                 <p className="text-sm text-dark-500 mb-3">
                   Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.
@@ -347,7 +424,7 @@ const AccountPage = () => {
                 <button className="text-red-500 text-sm font-medium hover:underline">
                   Xóa tài khoản của tôi
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         )
@@ -411,6 +488,4 @@ const AccountPage = () => {
     </div>
   )
 }
-
-export default AccountPage
 
